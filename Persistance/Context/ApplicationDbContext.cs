@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Persistance.Context
 {
-    public class ApplicationDbContext : DbContext//, IApplicationDbContext
+    public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
