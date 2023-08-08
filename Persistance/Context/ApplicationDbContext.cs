@@ -1,4 +1,5 @@
-﻿using Domain.Entites;
+﻿using Application.Interfaces;
+using Domain.Entites;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Persistance.Context
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
