@@ -23,6 +23,13 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetProductById(int id)
+        {
+            var result = await _mediator.Send(new GetProductByIdQuery { Id = id});
+            return Ok(result);
+        }
+
         [HttpPost("CreateProduct")]
         public async Task<IActionResult> CreateProduct(CreateProductCommand createProduct, CancellationToken cancellationToken)
         {
@@ -30,17 +37,17 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        [HttpPost("UpdateProduct")]
+        [HttpPut("UpdateProduct")]
         public async Task<IActionResult> UpdateProduct(UpdateProductCommand updateProduct, CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(updateProduct, cancellationToken);
             return Ok(result);
         }
 
-        [HttpPost("DeleteProduct")]
-        public async Task<IActionResult> DeleteProduct(DeleteProductCommand deleteProduct, CancellationToken cancellationToken)
+        [HttpDelete("DeleteProduct/{id}")]
+        public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(deleteProduct, cancellationToken);
+            var result = await _mediator.Send(new DeleteProductCommand { Id = id}, cancellationToken);
             return Ok(result);
         }
     }
