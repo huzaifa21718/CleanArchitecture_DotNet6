@@ -12,7 +12,7 @@ namespace Application
     {
         public static void AddApplication(this IServiceCollection services)
         {
-            //
+            services.AddAutoMapper(Assembly.GetExecutingAssembly());
             services.AddMediatR(conf => conf.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
         }
     }
