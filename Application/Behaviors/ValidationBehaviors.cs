@@ -1,5 +1,4 @@
-﻿using Application.Exceptions;
-using FluentValidation;
+﻿using FluentValidation;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -30,7 +29,7 @@ namespace Application.Behaviors
 
                 if (failers.Count > 0)
                 {
-                    throw new ValidationErrorException(failers); 
+                    throw new ValidationException(failers);
                 }
             }
 

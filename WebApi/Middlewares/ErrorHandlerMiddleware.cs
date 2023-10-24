@@ -31,10 +31,6 @@ namespace WebApi.Middlewares
                     case ApiException e:
                         response.StatusCode = (int)HttpStatusCode.BadRequest;
                         break;
-                    case ValidationErrorException e:
-                        response.StatusCode = (int)HttpStatusCode.BadRequest;
-                        responseModel.Errors = e.Errors;
-                        break;
                     default:
                         response.StatusCode = (int)HttpStatusCode.InternalServerError;
                         break;
