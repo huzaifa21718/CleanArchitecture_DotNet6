@@ -1,4 +1,6 @@
-﻿using Application.Interfaces;
+﻿using Application.Exceptions;
+using Application.Interfaces;
+using Application.Wrappers;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -9,27 +11,28 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Product.Commands
 {
-    public class DeleteProductCommand : IRequest<int>
+    public class DeleteProductCommand : IRequest<ApiResponse<int>>
     {
         public int Id { get; set; }
-        internal class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand, int>
+        internal class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand, ApiResponse<int>>
         {
             private readonly IApplicationDbContext _context;
             public DeleteProductCommandHandler(IApplicationDbContext context)
             {
                 _context = context;
             }
-            public async Task<int> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
+            public async Task<ApiResponse<int>> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
             {
                 var product = await _context.Products.Where(x => x.Id == request.Id).FirstOrDefaultAsync();
                 if (product == null)
                 {
-                    return default;
+                    throw new ApiException("Product not found against this Id");
                 }
 
                 _context.Products.Remove(product);
                 await _context.SaveChangesAsync();
-                return request.Id;
+
+                return new ApiResponse<int>(request.Id, "Product deleted successfuly");
             }
         }
     }
