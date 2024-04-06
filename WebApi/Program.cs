@@ -7,6 +7,7 @@ using Persistance;
 using System.Text;
 using WebApi;
 using WebApi.Middlewares;
+using WebApi.SharedServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,8 @@ builder.Services.AddSwaggerExtention();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 builder.Services.AddPersistance(builder.Configuration);
+builder.Services.AddScoped<IAuthenticatedUser, AuthenticatedUser>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

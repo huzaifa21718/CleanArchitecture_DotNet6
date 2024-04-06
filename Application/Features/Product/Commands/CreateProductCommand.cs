@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WebApi.SharedServices;
 
 namespace Application.Features.Product.Commands
 {
@@ -20,14 +21,18 @@ namespace Application.Features.Product.Commands
         {
             private readonly IApplicationDbContext _context;
             private readonly IMapper _mapper;
-            public CreateProductCommandHandler(IApplicationDbContext context, IMapper mapper)
+            private readonly IAuthenticatedUser _authenticatedUser;
+            public CreateProductCommandHandler(IApplicationDbContext context, IMapper mapper, IAuthenticatedUser authenticatedUser)
             {
                 _context = context;
                 _mapper = mapper;
+                _authenticatedUser = authenticatedUser;
             }
             public async Task<ApiResponse<int>> Handle(CreateProductCommand request, CancellationToken cancellationToken)
             {
                 var product = _mapper.Map<Domain.Entites.Product>(request);
+                product.CreatedBy = _authenticatedUser.UserId;
+                product.CreatedOn = DateTime.Now;
                 await _context.Products.AddAsync(product);
                 await _context.SaveChangesAsync();
 
