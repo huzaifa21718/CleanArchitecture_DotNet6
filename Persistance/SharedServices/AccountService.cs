@@ -3,6 +3,7 @@ using Application.Enums;
 using Application.Exceptions;
 using Application.Interfaces;
 using Application.Wrappers;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -21,10 +22,12 @@ namespace Persistance.SharedServices
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
-        public AccountService(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        private readonly IEmailService _emailService;
+        public AccountService(UserManager<ApplicationUser> userManager, IConfiguration configuration, IEmailService emailService)
         {
             _userManager = userManager;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         public async Task<ApiResponse<AuthenticationResponse>> Authenticate(AuthenticationRequest request)
@@ -116,6 +119,85 @@ namespace Persistance.SharedServices
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(userModel, Roles.Basic.ToString());
+
+
+                string emailTemplate = @"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Welcome Email</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            background: #ffffff;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .content {
+            font-size: 16px;
+            color: #666;
+            margin-top: 10px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #FF0000;
+            color: #ffffff;
+            padding: 12px 20px;
+            margin-top: 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <div class=""header"">Welcome [UserName]</div>
+        <div class=""content"">
+            Thank you for joining us. We are excited to have you on board. Click the button below to subscribe to my channel!
+        </div>
+        <a href=""https://www.youtube.com/@CodeWithHanif"" target=""_blank"" class=""button"">Subscribe Now</a>
+        <div class=""footer"">
+            If you have any questions, feel free to contact us at <a href=""https://www.linkedin.com/in/muhammad-hanif-shahzad-a49409214"" target=""_blank"">LinkedIn</a>
+        </div>
+    </div>
+</body>
+</html>
+";
+
+                var emailRequest = new EmailRequest()
+                {
+                    To = userModel.Email,
+                    Body = emailTemplate.Replace("[UserName]", userModel.Email),
+                    Subject = $"Welcome {userModel.Email} to CodeWithHanif",
+                    IsHtmlBody = true,
+                };
+
+
+                //emailRequest.Body = "User Register successfuly";
+
+                await _emailService.SendAsync(emailRequest);
+
                 return new ApiResponse<Guid>(userModel.Id, "User Register successfuly");
             }
             else
