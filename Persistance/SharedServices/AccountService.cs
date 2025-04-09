@@ -5,6 +5,7 @@ using Application.Interfaces;
 using Application.Wrappers;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Persistance.IdentityModels;
@@ -36,6 +37,11 @@ namespace Persistance.SharedServices
             if (user == null)
             {
                 throw new ApiException($"User not registered with this {request.Email}");
+            }
+
+            if (!user.EmailConfirmed)
+            {
+                throw new ApiException($"Email not confirmed, pls confirm your email to login");
             }
 
             var succeeded = await _userManager.CheckPasswordAsync(user, request.Password);
@@ -111,7 +117,6 @@ namespace Persistance.SharedServices
             userModel.FirstName = registerRequest.FirstName;
             userModel.LastName = registerRequest.LastName;
             userModel.Gender = registerRequest.Gender;
-            userModel.EmailConfirmed = true;
             userModel.PhoneNumberConfirmed = true;
 
             var result = await _userManager.CreateAsync(userModel, registerRequest.Password);
@@ -185,20 +190,19 @@ namespace Persistance.SharedServices
 </html>
 ";
 
-                var emailRequest = new EmailRequest()
-                {
-                    To = userModel.Email,
-                    Body = emailTemplate.Replace("[UserName]", userModel.Email),
-                    Subject = $"Welcome {userModel.Email} to CodeWithHanif",
-                    IsHtmlBody = true,
-                };
+                //var emailRequest = new EmailRequest()
+                //{
+                //    To = userModel.Email,
+                //    Body = emailTemplate.Replace("[UserName]", userModel.Email),
+                //    Subject = $"Welcome {userModel.Email} to CodeWithHanif",
+                //    IsHtmlBody = true,
+                //};
 
+                //await _emailService.SendAsync(emailRequest);
 
-                //emailRequest.Body = "User Register successfuly";
+                await SendConfirmationEmailAsync(userModel);
 
-                await _emailService.SendAsync(emailRequest);
-
-                return new ApiResponse<Guid>(userModel.Id, "User Register successfuly");
+                return new ApiResponse<Guid>(userModel.Id, "Verification email has been sent to your account, pls verify your account.");
             }
             else
             {
@@ -206,6 +210,45 @@ namespace Persistance.SharedServices
             }
 
 
+        }
+
+        private async Task SendConfirmationEmailAsync(ApplicationUser userModel)
+        {
+            string token = await _userManager.GenerateEmailConfirmationTokenAsync(userModel);
+
+            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+            string verificationUrl = $"{_configuration["ClientUrl"]}/api/account/confirm-email?userId={userModel.Id}&token={token}";
+
+            var emailRequest = new EmailRequest()
+            {
+                To = userModel.Email,
+                Body =  $"<p>Please verify your account by click on this link: {verificationUrl} </p> <br> <p>If this email is not realted to you please ignore it.</p>" ,
+                Subject = $"Confirm your email {userModel.Email} to CodeWithHanif",
+                IsHtmlBody = true,
+            };
+
+            await _emailService.SendAsync(emailRequest);
+        }
+
+        public async Task<ApiResponse<bool>> ConfirmEmail(string userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                throw new ApiException($"User not found with this {userId}");
+            }
+
+            token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            if (result.Succeeded)
+            {
+                return new ApiResponse<bool>(true, "Email confirmed successfully");
+            }
+            else
+            {
+                throw new ApiException(result.Errors.ToString());
+            }
         }
     }
 }
