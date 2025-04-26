@@ -45,5 +45,19 @@ namespace WebApi.Controllers
             var result = await _accountService.ResendConfirmationEmailAsync(email);
             return Ok(result);
         }
+
+        [HttpGet("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromQuery] string email, CancellationToken cancellationToken)
+        {
+            var result = await _accountService.ForgotPasswordAsync(email);
+            return Ok(result);
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequest resetPassword, CancellationToken cancellationToken)
+        {
+            var result = await _accountService.ResetPasswordAsync(resetPassword);
+            return Ok(result);
+        }
     }
 }

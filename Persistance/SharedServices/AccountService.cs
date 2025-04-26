@@ -267,5 +267,53 @@ namespace Persistance.SharedServices
             await SendConfirmationEmailAsync(user);
             return new ApiResponse<bool>(true, "Verification email has been sent to your account, pls verify your account.");
         }
+
+        public async Task<ApiResponse<bool>> ForgotPasswordAsync(string userEmail)
+        {
+            var user = await _userManager.FindByEmailAsync(userEmail);
+            if (user == null)
+            {
+                throw new ApiException($"User not found with this {userEmail}");
+            }
+
+            string token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+            string resetPasswordLink = $"{_configuration["ClientUrl"]}/api/account/reset-password?email={userEmail}&token={token}";
+
+            var emailRequest = new EmailRequest()
+            {
+                To = userEmail,
+                Body = $"<p>To reset your password click on this link: <a href='{resetPasswordLink}'>Click here to reset password</a> </p>",
+                Subject = $"Reset password",
+                IsHtmlBody = true,
+            };
+
+            await _emailService.SendAsync(emailRequest);
+            return new ApiResponse<bool>(true, "Reset password link has been sent to your account, pls check your email.");
+        }
+
+        public async Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordRequest resetPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(resetPassword.Email);
+            if (user == null)
+            {
+                throw new ApiException($"User not found with this {resetPassword.Email}");
+            }
+
+            var token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(resetPassword.Token));
+
+            var result = await _userManager.ResetPasswordAsync(user, token, resetPassword.NewPassword);
+
+            if (result.Succeeded)
+            {
+                return new ApiResponse<bool>(true, "Password reset successfully");
+            }
+            else
+            {
+                throw new ApiException(result.Errors.ToString());
+            }
+        }
     }
 }
