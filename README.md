@@ -4,15 +4,15 @@ Let's break down the dependencies and references step-by-step so you know which 
 📁 Typical Clean Architecture Layers
 Here's a recap of your structure:
 
-1.Core
+1.Core ➡
 Domain: Contains entities and interfaces (no dependency on any other project).
 Application: Contains business logic and use cases (depends on Domain).
 
-2.Infrastructure
+2.Infrastructure ➡
 Infrastructure: External services like email, file handling, etc. (depends on Application & Domain).
 Persistence: Contains EF Core, DB context, migrations (depends on Application & Domain).
 
-3.Presentation
+3.Presentation ➡
 WebApi: ASP.NET Core API project (depends on Application, Infrastructure, and Persistence).
 
 ✅ Project Reference Setup
